@@ -12,7 +12,7 @@ import { exec } from "child_process";
 
 const makerPackageName = "electron-forge-maker-appimage";
 
-interface AppImageForgeConfig {
+interface AppImageForgeConfig extends MakerAppImageConfig {
   template?: string;
   chmodChromeSandbox?: string;
 }
@@ -77,16 +77,49 @@ export default class MakerAppImage extends MakerBase<MakerAppImageConfig> {
     }
     desktopEntry += "\n";
 
-    // icons don't seem to work in AppImages anyway. this is just the default taken from the old AppImage maker.
-    const iconPath = path.join(dir, "../../src/icons/linux");
-    const icons = [
-      { file: `${iconPath}/16x16.png`, size: 16 },
-      { file: `${iconPath}/32x32.png`, size: 32 },
-      { file: `${iconPath}/48x48.png`, size: 48 },
-      { file: `${iconPath}/64x64.png`, size: 64 },
-      { file: `${iconPath}/128x128.png`, size: 128 },
-      { file: `${iconPath}/256x256.png`, size: 256 },
-    ];
+    // Use icon from config if provided, otherwise use packager config icon, otherwise fall back to hardcoded path
+    let iconFile: string | undefined;
+    if (config?.options?.icon) {
+      iconFile = path.resolve(config.options.icon);
+    } else if (forgeConfig.packagerConfig.icon) {
+      // Handle icon path from packager config (might be without extension for cross-platform compatibility)
+      const packagerIcon = forgeConfig.packagerConfig.icon as string;
+      iconFile = packagerIcon.endsWith(".png")
+        ? path.resolve(packagerIcon)
+        : path.resolve(`${packagerIcon}.png`);
+    }
+
+    // If we have a single icon file, use it for all sizes
+    const icons =
+      iconFile && existsSync(iconFile)
+        ? [{ file: iconFile, size: 512 }]
+        : [
+            // Fallback to old hardcoded path structure if no icon configured
+            {
+              file: path.join(dir, "../../src/icons/linux/16x16.png"),
+              size: 16,
+            },
+            {
+              file: path.join(dir, "../../src/icons/linux/32x32.png"),
+              size: 32,
+            },
+            {
+              file: path.join(dir, "../../src/icons/linux/48x48.png"),
+              size: 48,
+            },
+            {
+              file: path.join(dir, "../../src/icons/linux/64x64.png"),
+              size: 64,
+            },
+            {
+              file: path.join(dir, "../../src/icons/linux/128x128.png"),
+              size: 128,
+            },
+            {
+              file: path.join(dir, "../../src/icons/linux/256x256.png"),
+              size: 256,
+            },
+          ];
 
     const stageDir = path.join(makeDir, "__appImage-x64");
 

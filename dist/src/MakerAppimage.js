@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -53,13 +63,14 @@ class MakerAppImage extends maker_base_1.default {
     isSupportedOnCurrentPlatform() {
         return process.platform === "linux";
     }
-    make({ dir, // '/home/build/Software/monorepo/packages/electron/out/name-linux-x64'
-    appName, // 'name'
-    makeDir, // '/home/build/Software/monorepo/packages/electron/out/make',
-    targetArch, // 'x64'
-    packageJSON, targetPlatform, //'linux',
-    forgeConfig, }) {
-        return __awaiter(this, void 0, void 0, function* () {
+    make(_a) {
+        return __awaiter(this, arguments, void 0, function* ({ dir, // '/home/build/Software/monorepo/packages/electron/out/name-linux-x64'
+        appName, // 'name'
+        makeDir, // '/home/build/Software/monorepo/packages/electron/out/make',
+        targetArch, // 'x64'
+        packageJSON, targetPlatform, //'linux',
+        forgeConfig, }) {
+            var _b;
             const executableName = forgeConfig.packagerConfig.executableName || appName;
             // Check for any optional configuration data passed in from forge config, specific to this maker.
             let config;
@@ -86,16 +97,48 @@ class MakerAppImage extends maker_base_1.default {
                 desktopEntry += `\n${name}=${desktopMeta[name]}`;
             }
             desktopEntry += "\n";
-            // icons don't seem to work in AppImages anyway. this is just the default taken from the old AppImage maker.
-            const iconPath = path_1.default.join(dir, "../../src/icons/linux");
-            const icons = [
-                { file: `${iconPath}/16x16.png`, size: 16 },
-                { file: `${iconPath}/32x32.png`, size: 32 },
-                { file: `${iconPath}/48x48.png`, size: 48 },
-                { file: `${iconPath}/64x64.png`, size: 64 },
-                { file: `${iconPath}/128x128.png`, size: 128 },
-                { file: `${iconPath}/256x256.png`, size: 256 },
-            ];
+            // Use icon from config if provided, otherwise use packager config icon, otherwise fall back to hardcoded path
+            let iconFile;
+            if ((_b = config === null || config === void 0 ? void 0 : config.options) === null || _b === void 0 ? void 0 : _b.icon) {
+                iconFile = path_1.default.resolve(config.options.icon);
+            }
+            else if (forgeConfig.packagerConfig.icon) {
+                // Handle icon path from packager config (might be without extension for cross-platform compatibility)
+                const packagerIcon = forgeConfig.packagerConfig.icon;
+                iconFile = packagerIcon.endsWith(".png")
+                    ? path_1.default.resolve(packagerIcon)
+                    : path_1.default.resolve(`${packagerIcon}.png`);
+            }
+            // If we have a single icon file, use it for all sizes
+            const icons = iconFile && (0, fs_1.existsSync)(iconFile)
+                ? [{ file: iconFile, size: 512 }]
+                : [
+                    // Fallback to old hardcoded path structure if no icon configured
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/16x16.png"),
+                        size: 16,
+                    },
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/32x32.png"),
+                        size: 32,
+                    },
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/48x48.png"),
+                        size: 48,
+                    },
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/64x64.png"),
+                        size: 64,
+                    },
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/128x128.png"),
+                        size: 128,
+                    },
+                    {
+                        file: path_1.default.join(dir, "../../src/icons/linux/256x256.png"),
+                        size: 256,
+                    },
+                ];
             const stageDir = path_1.default.join(makeDir, "__appImage-x64");
             if (!(0, fs_1.existsSync)(makeDir)) {
                 (0, fs_1.mkdirSync)(makeDir, { recursive: true });
@@ -111,13 +154,13 @@ class MakerAppImage extends maker_base_1.default {
             }
             const args = [
                 "appimage",
-                "--stage",
+                "--stage", // '/home/build/Software/monorepo/packages/electron/out/make/__appImage-x64',
                 stageDir,
-                "--arch",
+                "--arch", // 'x64'
                 "x64",
-                "--output",
+                "--output", // '/home/build/Software/monorepo/packages/electron/out/make/name-2.0.6.AppImage',
                 appPath,
-                "--app",
+                "--app", // '/home/build/Software/monorepo/packages/electron/out/name-linux-x64',
                 dir,
                 "--configuration",
                 JSON.stringify({
