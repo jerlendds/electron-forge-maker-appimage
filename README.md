@@ -25,12 +25,26 @@ yarn add --dev https://github.com/jerlendds/electron-forge-maker-appimage.git
 ## example forgeconfig.js
 
 ```
+import MakerAppImage from "electron-forge-maker-appimage";
+
+...
+
 makers: [
-  {
-    name: 'electron-forge-maker-appimage',
-    platforms: ['linux'],
-    config: { template: 'assets/AppRunTemplate.sh' },
-  },
+    new MakerAppImage(
+      {
+        options: {
+          homepage: "https://osintbuddy.com",
+          description: "Entity graphs, OSINT data mining, and plugins.",
+          icon: "./src/assets/images/icon.png",
+          maintainer: "jerlendds <support@osintbuddy.com>",
+          name: "osib",
+          productDescription:
+            "Entity graphs, OSINT data mining, and plugins. Connect unstructured and public data for transformative insights",
+          productName: "OSINTBuddy",
+        },
+      },
+      ["linux"]
+    ),
 ];
 
 ```
