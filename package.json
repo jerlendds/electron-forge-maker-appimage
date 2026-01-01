@@ -9,9 +9,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@electron-forge/maker-base": "^7.1.0",
-    "@electron-forge/shared-types": "^7.1.0",
-    "app-builder-lib": "^24.13.3"
+    "@electron-forge/maker-base": "7.10.2",
+    "@electron-forge/shared-types": "7.10.2",
+    "app-builder-lib": "26.0.12"
   },
   "devDependencies": {
     "enquirer": "^2.4.1",
